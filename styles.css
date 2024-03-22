@@ -1,0 +1,13 @@
+#sidebar {
+    background-color: lightgray;
+    width: fit-content;
+    height: fit-content;
+}
+
+.num-input {
+    width: 3em;
+}
+
+label {
+    display: block;
+}
