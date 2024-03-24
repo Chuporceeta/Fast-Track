@@ -1,5 +1,6 @@
 #sidebar {
     background-color: lightgray;
+    opacity: 97%;
     width: fit-content;
     height: fit-content;
 }
@@ -8,6 +9,29 @@
     width: 3em;
 }
 
+#pop-input {
+    width: 6em;
+}
+
 label {
     display: block;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+html {
+    background-color: darkgray;
+}
+
+svg {
+    display: block;
+    position: absolute;
 }
