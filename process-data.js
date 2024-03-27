@@ -28,12 +28,11 @@ function fillCitiesList(data) {
 
 }
 
-function resizeSVG() {
+function resizeSVG(firstTime=false) {
     svg.setAttribute('width', ''+window.innerWidth);
     svg.setAttribute('height', ''+window.innerHeight);
 
-    graph.onResize();
-    graph.draw();
+    graph.onResize(firstTime);
 }
 
 function translateOnly(circle, transform) {
@@ -68,6 +67,7 @@ function init() {
         graph = new AdjList(cityData['data']);
         geojson = borderData;
         setUpZoom();
-        resizeSVG();
+        resizeSVG(true);
+        graph.onMinPopChange();
     });
 }

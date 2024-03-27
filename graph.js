@@ -9,7 +9,7 @@ class AdjList {
 
     }
 
-    onResize() {
+    onResize(firstTime=false) {
         // Set up map projection
         this.projection = d3.geoMercator()
             //.rotate([0, 60, 0])
@@ -26,22 +26,42 @@ class AdjList {
             .style('fill', 'darkgray')
             .style('stroke', 'black');
 
+        // Can't update nodes before they are first drawn
+        if (firstTime === true)
+            return;
+
+        let transform = d3.zoomTransform(d3.select('#graph > path').node()) ?? d3.zoomIdentity;
+
+        // Draw Nodes
+        d3.select('#graph')
+            .selectAll('circle')
+            .attr('cx', (id, i) => {
+                let city = this.cityData.get(id);
+                return this.projection([city.lon, city.lat])[0];
+            })
+            .attr('cy', (id, i) => {
+                let city = this.cityData.get(id);
+                return this.projection([city.lon, city.lat])[1];
+            })
+            .attr('transform', function(id, i) {
+                return translateOnly(d3.select(this), transform);
+            });
+
     }
 
-    draw() {
-        let radius = (id) => Math.log(this.cityData.get(id).pop-minPop)/3+3;
+    onMinPopChange() {
         let minPop = document.getElementById('pop-input').value;
 
-        // Get list of cities to display
-        let cityList = Array.from(this.cityData).map(([id, data]) => id);
-        cityList = cityList.filter(id => this.cityData.get(id).pop > minPop);
+        // Update list of cities to display
+        this.cityList = Array.from(this.cityData).map(([id, data]) => id);
+        this.cityList = this.cityList.filter(id => this.cityData.get(id).pop > minPop);
 
         let transform = d3.zoomTransform(d3.select('#graph > path').node()) ?? d3.zoomIdentity;
 
         // Draw Cities
         d3.select('#graph')
             .selectAll('circle')
-            .data(cityList, d => d)
+            .data(this.cityList, d => d)
             .join(
                 (enter) => {
                     return enter
@@ -56,9 +76,7 @@ class AdjList {
                         })
                         .attr('r', 0)
                         .style('fill', '#dcdcdc')
-                        .style('stroke', '#000000')
-                      ;
-
+                        .style('stroke', '#000000');
                 },
                 (update) => {
                     return update;
@@ -83,7 +101,6 @@ class AdjList {
                 return translateOnly(d3.select(this), transform);
             })
             .transition()
-            .attr('r', id => radius(id));
+            .attr('r', id => Math.log(this.cityData.get(id).pop-minPop)/3+3);
     }
-
 }

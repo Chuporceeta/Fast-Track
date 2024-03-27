@@ -10,7 +10,7 @@
 
     <div id="sidebar">
         <h1>Fast Track</h1>
-        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" onchange="resizeSVG()"></label>
+        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" onchange="graph.onMinPopChange()"></label>
         <label>
             City 1:
             <input list="cities" name="city1"/>
