@@ -4,6 +4,7 @@ let graph, geojson;
 init();
 
 async function getCityData() {
+    // Data taken from https://bridgesdata.herokuapp.com/api/us_cities
     const response = await fetch("us_cities.json");
     if (!response.ok)
         throw new Error(response.statusText);
@@ -11,21 +12,11 @@ async function getCityData() {
 }
 
 async function getUSBorders() {
-    // Data from https://github.com/ResidentMario/geoplot-data/blob/master/contiguous-usa.geojson
-    const response = await fetch('contiguous-usa.geojson');
+    // Data taken and modified from https://eric.clst.org/tech/usgeojson/
+    const response = await fetch('us_borders.json');
     if (!response.ok)
         throw new Error(response.statusText);
     return response.json();
-}
-
-function fillCitiesList(data) {
-    let cityList = document.getElementById("cities");
-    data.forEach((city) => {
-        let option = document.createElement("option");
-        option.value = city['city'];
-        cityList.append(option);
-    });
-
 }
 
 function resizeSVG(firstTime=false) {
@@ -35,8 +26,11 @@ function resizeSVG(firstTime=false) {
     graph.onResize(firstTime);
 }
 
-function translateOnly(circle, transform) {
-    return "translate(" + (circle.attr('cx')*(transform.k-1)+transform.x) + ", " + (circle.attr('cy')*(transform.k-1)+transform.y) +")";
+function translateOnly(obj) {
+    let x = obj.attr('cx') ?? obj.attr('x');
+    let y = obj.attr('cy') ?? obj.attr('y');
+    let transform = d3.zoomTransform(d3.select('#graph > path').node()) ?? d3.zoomIdentity;
+    return "translate(" + (x*(transform.k-1)+transform.x) + ", " + (y*(transform.k-1)+transform.y) +")";
 }
 
 function setUpZoom() {
@@ -45,9 +39,10 @@ function setUpZoom() {
         .on('zoom', e => {
             d3.select('#graph')
                 .selectAll('path')
-                .attr('transform', e.transform);
+                .attr('transform', e.transform)
+                .attr('stroke-width', Math.min(1, 2/e.transform.k));
             d3.select('#graph')
-                .selectAll('circle')
+                .selectAll('circle, text')
                 .attr('transform', function(id, i) {
                     return translateOnly(d3.select(this), e.transform);
                 });
@@ -63,7 +58,6 @@ function init() {
 
     Promise.all([cityDataP, borderDataP])
     .then(([cityData, borderData]) => {
-        fillCitiesList(cityData['data']);
         graph = new AdjList(cityData['data']);
         geojson = borderData;
         setUpZoom();

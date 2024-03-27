@@ -9,6 +9,15 @@
     width: 3em;
 }
 
+.city-label {
+    font-weight: bold;
+    font-family: "Arial Black", sans-serif;
+    font-size: 16px;
+    stroke: whitesmoke;
+    stroke-width: 1;
+    pointer-events: none;
+}
+
 #pop-input {
     width: 6em;
 }
