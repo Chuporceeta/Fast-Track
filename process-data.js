@@ -1,5 +1,13 @@
 const svg = document.getElementById('graph-svg');
-let graph, geojson;
+function dist(lon1, lat1, lon2, lat2) {
+    return Math.round(7912.2*Math.asin(Math.sqrt(
+            Math.pow(Math.sin(Math.PI*(lat1-lat2)/360), 2)
+            + Math.cos(Math.PI*lat1/180)
+                *Math.cos(Math.PI*lat2/180)
+                *Math.pow(Math.sin(Math.PI*(lon2-lon1)/360), 2))));
+}
+
+let graph;
 
 init();
 
@@ -43,7 +51,7 @@ function setUpZoom() {
                 .attr('stroke-width', Math.min(1, 2/e.transform.k));
             d3.select('#graph')
                 .selectAll('circle, text')
-                .attr('transform', function(id, i) {
+                .attr('transform', function() {
                     return translateOnly(d3.select(this), e.transform);
                 });
         });
@@ -53,13 +61,9 @@ function setUpZoom() {
 function init() {
     window.addEventListener('resize', resizeSVG, false);
 
-    const cityDataP = getCityData();
-    const borderDataP = getUSBorders();
-
-    Promise.all([cityDataP, borderDataP])
+    Promise.all([getCityData(), getUSBorders()])
     .then(([cityData, borderData]) => {
-        graph = new AdjList(cityData['data']);
-        geojson = borderData;
+        graph = new AdjList(cityData['data'], borderData);
         setUpZoom();
         resizeSVG(true);
         graph.onMinPopChange();
