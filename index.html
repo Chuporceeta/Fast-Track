@@ -6,38 +6,39 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <svg id="graph-svg"><g id="graph"></g></svg>
+    <svg id="graph-svg">
+        <g id="map"></g>
+        <g id="roads"></g>
+        <g id="cities"></g>
+    </svg>
 
     <div id="sidebar">
         <h1>Fast Track</h1>
         <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" onchange="graph.onMinPopChange()"></label>
         <label>
             City 1:
-            <input list="cities" name="city1"/>
+            <input list="cityList" name="city1"/>
         </label>
         <label>
             City 2:
-            <input list="cities" name="city2"/>
+            <input list="cityList" name="city2"/>
         </label>
-        <datalist id="cities"></datalist>
+        <datalist id="cityList"></datalist>
         <fieldset>
             <legend>Build roads to:</legend>
             <div>
-                <label><input type="radio" name="roads" id="n-closest-toggle" autocomplete="off" onchange="graph.calculateEdges()"> <input type="number" class="num-input" id="n" min="1" max="20" value="5" onchange="graph.calculateEdges()"> closest cities</label>
-                <label><input type="radio" name="roads" id="in-radius-toggle" autocomplete="off" onchange="graph.calculateEdges()"> cities within <input type="number" class="num-input" id="r" min="5" max="100" step="5" value="25" onchange="graph.calculateEdges()"> miles</label>
+                <label><input type="radio" name="roads" id="n-closest-toggle" autocomplete="off"> <input type="number" class="num-input" id="n" min="1" max="20" value="5"> closest cities</label>
+                <label><input type="radio" name="roads" id="in-radius-toggle" autocomplete="off"> cities within <input type="number" class="num-input" id="r" min="5" max="100" step="5" value="25"> miles</label>
             </div>
         </fieldset>
         <fieldset>
             <legend>Select a path-finding algorithm:</legend>
             <div>
-                <label><input type="radio" name="algorithm" autocomplete="off"> Breadth-First Search</label>
                 <label><input type="radio" name="algorithm" autocomplete="off"> Dijkstra's Algorithm</label>
-                <label><input type="radio" name="algorithm" autocomplete="off"> Bellman-Ford Algorithm</label>
-                <label><input type="radio" name="algorithm" autocomplete="off"> Floyd-Warshall Algorithm</label>
                 <label><input type="radio" name="algorithm" autocomplete="off"> A* Search</label>
             </div>
         </fieldset>
-        <input type="submit" value="Go!"/>
+        <input type="button" value="Go!" onclick="launch()"/>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>

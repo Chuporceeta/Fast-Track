@@ -37,7 +37,7 @@ function resizeSVG(firstTime=false) {
 function translateOnly(obj) {
     let x = obj.attr('cx') ?? obj.attr('x');
     let y = obj.attr('cy') ?? obj.attr('y');
-    let transform = d3.zoomTransform(d3.select('#graph > path').node()) ?? d3.zoomIdentity;
+    let transform = d3.zoomTransform(d3.select('#map > path').node()) ?? d3.zoomIdentity;
     return "translate(" + (x*(transform.k-1)+transform.x) + ", " + (y*(transform.k-1)+transform.y) +")";
 }
 
@@ -45,15 +45,20 @@ function setUpZoom() {
     // Set up zoom and pan
     let zoom = d3.zoom()
         .on('zoom', e => {
-            d3.select('#graph')
+            d3.select('#map')
                 .selectAll('path')
                 .attr('transform', e.transform)
-                .attr('stroke-width', Math.min(1, 2/e.transform.k));
-            d3.select('#graph')
+                .style('stroke-width', Math.min(1, 2/e.transform.k));
+            d3.select('#roads')
+                .selectAll('path')
+                .attr('transform', e.transform)
+                .style('stroke-width', Math.min(1, 2/e.transform.k));
+            d3.select('#cities')
                 .selectAll('circle, text')
                 .attr('transform', function() {
                     return translateOnly(d3.select(this), e.transform);
                 });
+            graph.transform = e.transform;
         });
     d3.select('#graph-svg').call(zoom);
 }
@@ -68,4 +73,9 @@ function init() {
         resizeSVG(true);
         graph.onMinPopChange();
     });
+}
+
+function launch() {
+    graph.calculateEdges();
+    graph.drawEdges();
 }

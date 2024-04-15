@@ -19,7 +19,10 @@ class QuadTree {
         let [x, y] = this.projection([city.lon, city.lat]);
         let res = [];
         for (let i=0; i<=n; i++) {
-            res.push(this.d3tree.find(x, y));
+            let nearest = this.d3tree.find(x, y);
+            if (nearest === undefined)
+                break;
+            res.push(nearest);
             this.d3tree.remove(res[i]);
         }
         this.d3tree.addAll(res);

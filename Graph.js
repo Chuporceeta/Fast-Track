@@ -7,6 +7,8 @@ class AdjList {
                 this.cityData.set(city['id'], {lat:city['lat'], lon:city['lon'], name:city['city'], pop:city['population'], state:city['state']});
         });
         this.graph = new Map(); // fromCityId : [[toCityId, distance], ...]
+        this.edgeParams = [true, 5];
+        this.transform = null;
     }
 
     addEdges(fromId, toIds) {
@@ -26,18 +28,53 @@ class AdjList {
 
         if (nClosest === true) { // Create edges to the n closest cities
             let n = document.getElementById('n').value;
+            if (this.edgeParams === [nClosest, n])
+                return;
+            this.edgeParams = [true, n];
             for (let fromId of this.cityList) {
                 let toIds = quadtree.nClosest(n, fromId);
                 this.addEdges(fromId, toIds);
             }
         } else { // Create edges to all cities within r miles
             let r = document.getElementById('r').value;
+            if (this.edgeParams === [nClosest, r])
+                return;
+            this.edgeParams = [false, r];
             for (let fromId of this.cityList) {
                 let toIds = quadtree.inRadius(r, fromId);
                 this.addEdges(fromId, toIds);
             }
         }
         console.log("done");
+    }
+
+    drawEdges() {
+        let geoJson = {
+            "type": "FeatureCollection",
+            "features": []
+        };
+        for (let [fromId, toCities] of this.graph) {
+            for (let [toId, dist] of toCities) {
+                let fromCity = this.cityData.get(fromId);
+                let toCity = this.cityData.get(toId);
+                geoJson.features.push({
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: [[fromCity.lon, fromCity.lat], [toCity.lon, toCity.lat]]
+                    }
+                });
+            }
+        }
+        d3.select('#roads')
+            .selectAll('path')
+            .data(geoJson.features)
+            .join('path')
+            .attr('d', this.geoGenerator)
+            .attr('transform', this.transform)
+            .style('stroke', 'black')
+            .style('fill', 'none')
+            .style('stroke-width', Math.min(1, 2/e.transform.k));
     }
 
     onResize(firstTime=false) {
@@ -49,7 +86,7 @@ class AdjList {
             .projection(this.projection);
 
         // Draw Map
-        d3.select('#graph')
+        d3.select('#map')
             .selectAll('path')
             .data(this.geojson['features'])
             .join('path')
@@ -61,10 +98,8 @@ class AdjList {
         if (firstTime === true)
             return;
 
-        let transform = d3.zoomTransform(d3.select('#graph > path').node()) ?? d3.zoomIdentity;
-
         // Update City Locations
-        d3.select('#graph')
+        d3.select('#cities')
             .selectAll('circle')
             .attr('cx', id => {
                 let city = this.cityData.get(id);
@@ -75,9 +110,11 @@ class AdjList {
                 return this.projection([city.lon, city.lat])[1];
             })
             .attr('transform', function() {
-                return translateOnly(d3.select(this), transform);
+                return translateOnly(d3.select(this), this.transform);
             });
 
+        // Redraw Edges
+        this.drawEdges();
     }
 
     onMinPopChange() {
@@ -88,7 +125,7 @@ class AdjList {
         this.cityList = this.cityList.filter(id => this.cityData.get(id).pop > minPop);
 
         // Update City Dropdown
-        let dropdown = document.getElementById("cities");
+        let dropdown = document.getElementById("cityList");
         dropdown.replaceChildren();
         this.cityList.forEach((id) => {
             let option = document.createElement("option");
@@ -96,8 +133,13 @@ class AdjList {
             dropdown.append(option);
         });
 
+        // Clear Roads
+        d3.select('#roads')
+            .selectAll('path')
+            .remove();
+
         // Draw Cities
-        d3.select('#graph')
+        d3.select('#cities')
             .selectAll('circle')
             .data(this.cityList, d => d)
             .join(
