@@ -1,3 +1,6 @@
+const map = document.getElementById('map-canvas').getContext('2d');
+const roads = document.getElementById('roads-canvas').getContext('2d');
+const cities = document.getElementById('cities-canvas').getContext('2d');
 const svg = document.getElementById('graph-svg');
 function dist(lon1, lat1, lon2, lat2) {
     return Math.round(7912.2*Math.asin(Math.sqrt(
@@ -13,7 +16,7 @@ init();
 
 async function getCityData() {
     // Data taken from https://bridgesdata.herokuapp.com/api/us_cities
-    const response = await fetch("us_cities.json");
+    const response = await fetch('us_cities.json');
     if (!response.ok)
         throw new Error(response.statusText);
     return response.json();
@@ -27,33 +30,18 @@ async function getUSBorders() {
     return response.json();
 }
 
-function resizeSVG(firstTime=false) {
-    svg.setAttribute('width', ''+window.innerWidth);
-    svg.setAttribute('height', ''+window.innerHeight);
-
-    graph.onResize(firstTime);
-}
-
-function translateOnly(obj) {
+function translateOnly(obj, transform) {
     let x = obj.attr('cx') ?? obj.attr('x');
     let y = obj.attr('cy') ?? obj.attr('y');
-    let transform = d3.zoomTransform(d3.select('#map > path').node()) ?? d3.zoomIdentity;
-    return "translate(" + (x*(transform.k-1)+transform.x) + ", " + (y*(transform.k-1)+transform.y) +")";
+    transform ??= d3.zoomIdentity;
+    return 'translate(' + (x*(transform.k-1)+transform.x) + ', ' + (y*(transform.k-1)+transform.y) +')';
 }
 
 function setUpZoom() {
     // Set up zoom and pan
     let zoom = d3.zoom()
         .on('zoom', e => {
-            d3.select('#map')
-                .selectAll('path')
-                .attr('transform', e.transform)
-                .style('stroke-width', Math.min(1, 2/e.transform.k));
-            d3.select('#roads')
-                .selectAll('path')
-                .attr('transform', e.transform)
-                .style('stroke-width', Math.min(1, 2/e.transform.k));
-            d3.select('#cities')
+            d3.select('#graph')
                 .selectAll('circle, text')
                 .attr('transform', function() {
                     return translateOnly(d3.select(this), e.transform);
@@ -63,19 +51,34 @@ function setUpZoom() {
     d3.select('#graph-svg').call(zoom);
 }
 
+function onResize(firstTime=false) {
+    svg.setAttribute('width', ''+innerWidth);
+    svg.setAttribute('height', ''+innerHeight);
+
+    graph.onResize(firstTime);
+}
+
+function draw() {
+    graph.drawMap();
+    graph.drawEdges();
+    graph.drawCities();
+    requestAnimationFrame(draw);
+}
+
 function init() {
-    window.addEventListener('resize', resizeSVG, false);
+    window.addEventListener('resize', onResize, false);
 
     Promise.all([getCityData(), getUSBorders()])
     .then(([cityData, borderData]) => {
         graph = new AdjList(cityData['data'], borderData);
-        setUpZoom();
-        resizeSVG(true);
+        //setUpZoom();
+        onResize(true);
         graph.onMinPopChange();
+        draw();
     });
 }
 
 function launch() {
+    graph.markEndpoints();
     graph.calculateEdges();
-    graph.drawEdges();
 }

@@ -30,17 +30,20 @@ class QuadTree {
         return res;
     }
 
-    inRadius(r, id) {
+    nInRadius(n, r, id) {
+        if (n === '-1')
+            n = Number.MAX_SAFE_INTEGER;
         let city = this.graph.cityData.get(id);
         let [x, y] = this.projection([city.lon, city.lat]);
         let res = [];
-        let currCity;
+        let currCity, count = -2; // offset count for self and OOR city
         do {
             let currId = this.d3tree.find(x, y);
             currCity = this.graph.cityData.get(currId);
             res.push(currId);
             this.d3tree.remove(currId);
-        } while (dist(city.lon, city.lat, currCity.lon, currCity.lat) <= r);
+            count++;
+        } while (dist(city.lon, city.lat, currCity.lon, currCity.lat) <= r && count < n);
         this.d3tree.addAll(res);
         res.pop();
         res.shift();
