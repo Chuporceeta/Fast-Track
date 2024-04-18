@@ -1,7 +1,7 @@
 const map = document.getElementById('map-canvas').getContext('2d');
 const roads = document.getElementById('roads-canvas').getContext('2d');
+const cities = document.getElementById('cities-canvas').getContext('2d');
 const svg = document.getElementById('graph-svg');
-
 function dist(lon1, lat1, lon2, lat2) {
     return Math.round(7912.2*Math.asin(Math.sqrt(
             Math.pow(Math.sin(Math.PI*(lat1-lat2)/360), 2)
@@ -58,6 +58,13 @@ function onResize(firstTime=false) {
     graph.onResize(firstTime);
 }
 
+function draw() {
+    graph.drawMap();
+    graph.drawEdges();
+    graph.drawCities();
+    requestAnimationFrame(draw);
+}
+
 function init() {
     window.addEventListener('resize', onResize, false);
 
@@ -67,10 +74,10 @@ function init() {
         //setUpZoom();
         onResize(true);
         graph.onMinPopChange();
+        draw();
     });
 }
 
 function launch() {
     graph.calculateEdges();
-    graph.drawEdges();
 }

@@ -5,10 +5,11 @@
     <title>Fast Track</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body id="body">
     <div id="content">
         <canvas id="map-canvas"></canvas>
         <canvas id="roads-canvas"></canvas>
+        <canvas id="cities-canvas"></canvas>
     </div>
 
     <svg id="graph-svg">
@@ -45,6 +46,7 @@
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="Canvas.js"></script>
     <script src="QuadTree.js"></script>
     <script src="Graph.js"></script>
     <script src="process-data.js"></script>
