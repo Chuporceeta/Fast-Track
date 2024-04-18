@@ -79,5 +79,6 @@ function init() {
 }
 
 function launch() {
+    graph.markEndpoints();
     graph.calculateEdges();
 }

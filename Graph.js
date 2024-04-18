@@ -8,46 +8,60 @@ class AdjList {
         });
         this.cityData = new Map([...this.cityData.entries()].sort((a, b) => a[1].pop - b[1].pop));
         this.graph = new Map(); // fromCityId : [[toCityId, distance], ...]
-        this.edgeParams = [true, 5];
+        this.edgeParams = [0, 0];
         this.transform = d3.zoomIdentity;
         this.active = false;
+        this.endPoints = [-1, -1]
     }
 
-    addEdges(fromId, toIds) {
+    addEdge(fromId, toId) {
+        if (!this.graph.has(fromId))
+            this.graph.set(fromId, new Set());
+        if (!this.graph.has(toId))
+            this.graph.set(toId, new Set());
+
         let fromCity = this.cityData.get(fromId);
-        this.graph.set(fromId, []);
-        let edges = this.graph.get(fromId);
-        for (let toId of toIds) {
-            let toCity = this.cityData.get(toId);
-            edges.push([toId, dist(fromCity.lon, fromCity.lat, toCity.lon, toCity.lat)]);
-        }
+        let toCity = this.cityData.get(toId);
+
+        let d = dist(fromCity.lon, fromCity.lat, toCity.lon, toCity.lat);
+
+        this.graph.get(fromId).add([toId, d]);
+        this.graph.get(toId).add([fromId, d]);
     }
 
     calculateEdges() {
-        this.graph.clear();
-        let quadtree = new QuadTree(this);
-        let nClosest = document.getElementById('n-closest-toggle').checked;
+        let n = document.getElementById('n').value;
+        let r = document.getElementById('r').value;
 
-        if (nClosest === true) { // Create edges to the n closest cities
-            let n = document.getElementById('n').value;
-            if (this.edgeParams === [nClosest, n])
-                return;
-            this.edgeParams = [true, n];
+        // Don't recalculate what's already there
+        if (this.edgeParams === [n, r])
+            return;
+
+        let quadtree = new QuadTree(this);
+
+        // Clear old edges
+        this.graph.clear();
+
+        // Create new edges
+        if (n === '-1' && r === '-1') { // Fully connected
+            for (let i=0; i<this.cityList.length; i++)
+                for (let j=i+1; j<this.cityList.length; j++)
+                    this.addEdge(this.cityList[i], this.cityList[j]);
+        } else if (r === '-1') { // Create edges to the n closest cities
             for (let fromId of this.cityList) {
                 let toIds = quadtree.nClosest(n, fromId);
-                this.addEdges(fromId, toIds);
+                for (let toId of toIds)
+                    this.addEdge(fromId, toId);
             }
-        } else { // Create edges to all cities within r miles
-            let r = document.getElementById('r').value;
-            if (this.edgeParams === [nClosest, r])
-                return;
-            this.edgeParams = [false, r];
+        } else { // Create edges to the n closest cities within r miles
             for (let fromId of this.cityList) {
-                let toIds = quadtree.inRadius(r, fromId);
-                this.addEdges(fromId, toIds);
+                let toIds = quadtree.nInRadius(n, r, fromId);
+                for (let toId of toIds)
+                    this.addEdge(fromId, toId);
             }
         }
         this.active = true;
+        this.edgeParams = [n, r];
     }
 
     drawMap() {
@@ -103,7 +117,7 @@ class AdjList {
                     });
                 }
             }
-            roads.lineWidth = 0.7;
+            roads.lineWidth = 1/cameraZoom;
             roads.beginPath();
             this.geoGenerator(geoJson);
             roads.stroke();
@@ -130,11 +144,30 @@ class AdjList {
         cities.clearRect(0, 0, innerWidth, innerHeight);
 
         this.geoGenerator.context(cities);
-        cities.beginPath();
         cities.lineWidth = 1.5/cameraZoom;
         cities.fillStyle = '#dcdcdc';
         for (let id of this.cityList)
             this.drawCity(id);
+
+        cities.fillStyle = 'red';
+        cities.strokeStyle = 'red';
+        if (this.endPoints[0] !== -1)
+            this.drawCity(this.endPoints[0]);
+        if (this.endPoints[1] !== -1)
+            this.drawCity(this.endPoints[1]);
+    }
+
+    markEndpoints() {
+        let [city1, state1] = document.getElementById('city1').value.split(', ');
+        let [city2, state2] = document.getElementById('city2').value.split(', ');
+
+        for (let id of this.cityList) {
+            let city = this.cityData.get(id);
+            if (city.name === city1 && city.state === state1)
+                this.endPoints[0] = id;
+            if (city.name === city2 && city.state === state2)
+                this.endPoints[1] = id;
+        }
     }
 
     onResize(firstTime=false) {

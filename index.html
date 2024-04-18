@@ -18,21 +18,24 @@
 
     <div id="sidebar">
         <h1>Fast Track</h1>
-        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" onchange="graph.onMinPopChange()"></label>
+        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" autocomplete="off" onchange="graph.onMinPopChange()"></label>
         <label>
             City 1:
-            <input list="cityList" name="city1"/>
+            <input list="cityList" id="city1"/>
         </label>
         <label>
             City 2:
-            <input list="cityList" name="city2"/>
+            <input list="cityList" id="city2"/>
         </label>
         <datalist id="cityList"></datalist>
         <fieldset>
             <legend>Build roads to:</legend>
             <div>
-                <label><input type="radio" name="roads" id="n-closest-toggle" autocomplete="off"> <input type="number" class="num-input" id="n" min="1" max="20" value="5"> closest cities</label>
-                <label><input type="radio" name="roads" id="in-radius-toggle" autocomplete="off"> cities within <input type="number" class="num-input" id="r" min="100" max="500" step="50" value="100"> miles</label>
+                <label>
+                    the <input type="number" class="num-input" autocomplete="off" id="n" min="-1" max="20" value="5"> closest cities
+                    within <input type="number" class="num-input" autocomplete="off" id="r" min="-1" max="999" step="100" value="-1"> miles.
+                </label>
+                (enter -1 in either field for ∞)
             </div>
         </fieldset>
         <fieldset>

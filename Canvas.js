@@ -1,9 +1,8 @@
 // Canvas pan and zoom code adapted from https://codepen.io/chengarda/pen/wRxoyB
-
 let cameraOffset = { x: window.innerWidth/2, y: window.innerHeight/2 }
 let cameraZoom = 1
 let zoomLoc = {x: innerWidth/2, y: innerHeight/2};
-let MIN_ZOOM = 0.1
+let MIN_ZOOM = 0.5
 let SCROLL_SENSITIVITY = 0.0005
 let isDragging = false
 let dragStart = { x: 0, y: 0 }
