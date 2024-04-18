@@ -7,26 +7,31 @@ class AdjList {
                 this.cityData.set(city['id'], {lat:city['lat'], lon:city['lon'], name:city['city'], pop:city['population'], state:city['state']});
         });
         this.cityData = new Map([...this.cityData.entries()].sort((a, b) => a[1].pop - b[1].pop));
-        this.graph = new Map(); // fromCityId : [[toCityId, distance], ...]
+        this.graph = new Map(); // {fromCityId : {toCityId: distance, ...}, ...}
         this.edgeParams = [0, 0];
         this.transform = d3.zoomIdentity;
         this.active = false;
         this.endPoints = [-1, -1]
+        this.path = null;
+    }
+
+    dist(fromId, toId) {
+        let fromCity = this.cityData.get(fromId);
+        let toCity = this.cityData.get(toId);
+
+        return dist(fromCity.lon, fromCity.lat, toCity.lon, toCity.lat);
     }
 
     addEdge(fromId, toId) {
         if (!this.graph.has(fromId))
-            this.graph.set(fromId, new Set());
+            this.graph.set(fromId, new Map());
         if (!this.graph.has(toId))
-            this.graph.set(toId, new Set());
+            this.graph.set(toId, new Map());
 
-        let fromCity = this.cityData.get(fromId);
-        let toCity = this.cityData.get(toId);
+        let d = this.dist(fromId, toId);
 
-        let d = dist(fromCity.lon, fromCity.lat, toCity.lon, toCity.lat);
-
-        this.graph.get(fromId).add([toId, d]);
-        this.graph.get(toId).add([fromId, d]);
+        this.graph.get(fromId).set(toId, d);
+        this.graph.get(toId).set(fromId, d);
     }
 
     calculateEdges() {
@@ -121,7 +126,38 @@ class AdjList {
             roads.beginPath();
             this.geoGenerator(geoJson);
             roads.stroke();
+
+            this.tracePath();
         }
+    }
+
+    tracePath() {
+        if (this.path === null)
+            return;
+        let geoJson = {
+            "type": "FeatureCollection",
+            "features": []
+        };
+
+        let prev = this.cityData.get(this.path[0]);
+        for (let i=1; i<this.path.length; i++) {
+            let fromCity = prev;
+            let toCity = this.cityData.get(this.path[i]);
+            geoJson.features.push({
+                type: "Feature",
+                geometry: {
+                    type: "LineString",
+                    coordinates: [[fromCity.lon, fromCity.lat], [toCity.lon, toCity.lat]]
+                }
+            });
+            prev = toCity;
+        }
+
+        roads.lineWidth = 2/cameraZoom;
+        roads.strokeStyle = 'red';
+        roads.beginPath();
+        this.geoGenerator(geoJson);
+        roads.stroke();
     }
 
     drawCity(id) {
@@ -214,6 +250,9 @@ class AdjList {
             dropdown.append(option);
         }
 
+        document.getElementById('city1').value = '';
+        document.getElementById('city2').value = '';
+
         this.active = false;
 
         // Draw Cities
@@ -270,5 +309,67 @@ class AdjList {
         //     })
         //     .transition()
         //     .attr('r', id => Math.log(this.cityData.get(id).pop-minPop)/3+3);
+    }
+
+    search() {
+        let dijkstra = document.getElementById('dijkstra-toggle').checked;
+        let aStar = document.getElementById('a*-toggle').checked;
+
+        if (!dijkstra && !aStar)
+            window.alert('Please select a path-finding algorithm.');
+        else if (this.endPoints.includes(-1))
+            window.alert('Please select the start and end cities.');
+        else if (dijkstra)
+            this.path = this.Dijkstra(...this.endPoints);
+        else if (aStar)
+            this.path = this.AStar(...this.endPoints);
+    }
+
+    Dijkstra(start, goal) {
+
+    }
+
+    AStar(start, goal) {
+        let h = n => this.dist(n, goal);
+
+        let openSet = new BinaryHeap(x => x.f);
+        openSet.push({id:start, f:h(start)});
+
+        let predecessors = new Map();
+
+        let gScores = new Map();
+        gScores.set(start, 0);
+
+        while (openSet.size() > 0) {
+            let current = openSet.pop();
+
+            if (current.id === goal) {
+                current = current.id;
+                let path = [current];
+                while (predecessors.has(current)) {
+                    current = predecessors.get(current);
+                    path.unshift(current);
+                }
+                return path;
+            }
+
+            for (let [neighbor, d] of this.graph.get(current.id)) {
+                let newGScore = (gScores.get(current.id) ?? Number.MAX_SAFE_INTEGER) + d;
+                if (newGScore < (gScores.get(neighbor) ?? Number.MAX_SAFE_INTEGER)) {
+                    predecessors.set(neighbor, current.id);
+                    gScores.set(neighbor, newGScore);
+                    // if neighbor not in openSet
+                    let found = false;
+                    for (let pair of openSet.content)
+                        if (pair.id === neighbor) {
+                            found = true;
+                            break;
+                        }
+                    if (!found)
+                        openSet.push({id: neighbor, f: newGScore + h(neighbor)})
+                }
+            }
+        }
+        return null;
     }
 }
