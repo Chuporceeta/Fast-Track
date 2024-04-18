@@ -6,9 +6,10 @@ class AdjList {
             if (city['state'] !== 'AK' && city['state'] !== 'HI')
                 this.cityData.set(city['id'], {lat:city['lat'], lon:city['lon'], name:city['city'], pop:city['population'], state:city['state']});
         });
+        this.cityData = new Map([...this.cityData.entries()].sort((a, b) => a[1].pop - b[1].pop));
         this.graph = new Map(); // fromCityId : [[toCityId, distance], ...]
         this.edgeParams = [true, 5];
-        this.transform = null;
+        this.transform = d3.zoomIdentity;
     }
 
     addEdges(fromId, toIds) {
@@ -45,14 +46,37 @@ class AdjList {
                 this.addEdges(fromId, toIds);
             }
         }
-        console.log("done");
+    }
+
+    drawMap() {
+        map.canvas.width = innerWidth;
+        map.canvas.height = innerHeight;
+        map.fillStyle = '#0d1728';
+        map.fillRect(0, 0, innerWidth, innerHeight);
+
+        this.geoGenerator.context(map);
+
+        // Draw Map
+        map.lineWidth = 0.5;
+        map.beginPath();
+        map.fillStyle = '#a9a9a9';
+        this.geoGenerator(this.geojson);
+        map.fill();
+        map.stroke();
     }
 
     drawEdges() {
+        roads.canvas.width = innerWidth;
+        roads.canvas.height = innerHeight;
+        roads.clearRect(0, 0, innerWidth, innerHeight);
+
+        this.geoGenerator.context(roads);
+
         let geoJson = {
             "type": "FeatureCollection",
             "features": []
         };
+
         for (let [fromId, toCities] of this.graph) {
             for (let [toId, dist] of toCities) {
                 let fromCity = this.cityData.get(fromId);
@@ -66,40 +90,30 @@ class AdjList {
                 });
             }
         }
-        d3.select('#roads')
-            .selectAll('path')
-            .data(geoJson.features)
-            .join('path')
-            .attr('d', this.geoGenerator)
-            .attr('transform', this.transform)
-            .style('stroke', 'black')
-            .style('fill', 'none')
-            .style('stroke-width', Math.min(1, 2/e.transform.k));
+        roads.lineWidth = 0.5;
+        roads.beginPath();
+        this.geoGenerator(geoJson);
+        roads.stroke();
     }
 
     onResize(firstTime=false) {
         // Set up map projection
         this.projection = d3.geoMercator()
             //.rotate([0, 60, 0])
-            .fitExtent([[0,0], [window.innerWidth, window.innerHeight]], this.geojson);
+            .fitExtent([[0,0], [innerWidth, innerHeight]], this.geojson);
         this.geoGenerator = d3.geoPath()
             .projection(this.projection);
 
-        // Draw Map
-        d3.select('#map')
-            .selectAll('path')
-            .data(this.geojson['features'])
-            .join('path')
-            .attr('d', this.geoGenerator)
-            .style('fill', 'darkgray')
-            .style('stroke', 'black');
+        this.drawMap();
 
         // Can't update cities before they are first drawn
         if (firstTime === true)
             return;
 
-        // Update City Locations
-        d3.select('#cities')
+        this.drawEdges();
+
+        // Update city locations
+        d3.select('#graph')
             .selectAll('circle')
             .attr('cx', id => {
                 let city = this.cityData.get(id);
@@ -108,13 +122,8 @@ class AdjList {
             .attr('cy', id => {
                 let city = this.cityData.get(id);
                 return this.projection([city.lon, city.lat])[1];
-            })
-            .attr('transform', function() {
-                return translateOnly(d3.select(this), this.transform);
             });
 
-        // Redraw Edges
-        this.drawEdges();
     }
 
     onMinPopChange() {
@@ -125,21 +134,19 @@ class AdjList {
         this.cityList = this.cityList.filter(id => this.cityData.get(id).pop > minPop);
 
         // Update City Dropdown
-        let dropdown = document.getElementById("cityList");
+        let dropdown = document.getElementById('cityList');
         dropdown.replaceChildren();
-        this.cityList.forEach((id) => {
-            let option = document.createElement("option");
-            option.value = this.cityData.get(id).name + ", " + this.cityData.get(id).state;
+        for (let id of this.cityList) {
+            let option = document.createElement('option');
+            option.value = this.cityData.get(id).name + ', ' + this.cityData.get(id).state;
             dropdown.append(option);
-        });
+        }
 
-        // Clear Roads
-        d3.select('#roads')
-            .selectAll('path')
-            .remove();
+        roads.clearRect(0, 0, innerWidth, innerHeight);
 
         // Draw Cities
-        d3.select('#cities')
+        let self = this;
+        d3.select('#graph')
             .selectAll('circle')
             .data(this.cityList, d => d)
             .join(
@@ -147,21 +154,20 @@ class AdjList {
                     return enter
                         .append('circle')
                         .on('mouseover', (e, id) => {
-                            let self = d3.select(e.target);
-                            self.style('fill', 'red');
+                            let target = d3.select(e.target);
+                            target.style('fill', 'red');
 
                             d3.select('#graph').append('text')
                                     .text(this.cityData.get(id).name)
                                     .classed('city-label', true)
-                                    .attr('x', self.attr('cx'))
-                                    .attr('y', self.attr('cy'))
+                                    .attr('x', target.attr('cx'))
+                                    .attr('y', target.attr('cy'))
                                     .attr('transform', function() {
-                                        return translateOnly(d3.select(this));
+                                        return translateOnly(d3.select(this), self.transform);
                                     });
                         })
-                        .on('mouseout', e => {
-                            d3.select(e.target)
-                                .style('fill', '#dcdcdc');
+                        .on('mouseout', function(e) {
+                            d3.select(this).style('fill', '#dcdcdc');
                             d3.selectAll('#graph > text').remove();
                         })
                         .attr('r', 0)
@@ -188,7 +194,7 @@ class AdjList {
                 return this.projection([city.lon, city.lat])[1];
             })
             .attr('transform', function() {
-                return translateOnly(d3.select(this));
+                return translateOnly(d3.select(this), self.transform);
             })
             .transition()
             .attr('r', id => Math.log(this.cityData.get(id).pop-minPop)/3+3);

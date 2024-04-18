@@ -6,10 +6,13 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="content">
+        <canvas id="map-canvas"></canvas>
+        <canvas id="roads-canvas"></canvas>
+    </div>
+
     <svg id="graph-svg">
-        <g id="map"></g>
-        <g id="roads"></g>
-        <g id="cities"></g>
+        <g id="graph"></g>
     </svg>
 
     <div id="sidebar">
@@ -28,7 +31,7 @@
             <legend>Build roads to:</legend>
             <div>
                 <label><input type="radio" name="roads" id="n-closest-toggle" autocomplete="off"> <input type="number" class="num-input" id="n" min="1" max="20" value="5"> closest cities</label>
-                <label><input type="radio" name="roads" id="in-radius-toggle" autocomplete="off"> cities within <input type="number" class="num-input" id="r" min="5" max="100" step="5" value="25"> miles</label>
+                <label><input type="radio" name="roads" id="in-radius-toggle" autocomplete="off"> cities within <input type="number" class="num-input" id="r" min="100" max="500" step="50" value="100"> miles</label>
             </div>
         </fieldset>
         <fieldset>
