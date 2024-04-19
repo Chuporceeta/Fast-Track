@@ -1,4 +1,4 @@
-// From https://eloquentjavascript.net/1st_edition/appendix2.html
+// Min Heap code from https://eloquentjavascript.net/1st_edition/appendix2.html
 function BinaryHeap(scoreFunction){
     this.content = [];
     this.scoreFunction = scoreFunction;

@@ -1,4 +1,4 @@
-// Canvas pan and zoom code adapted from https://codepen.io/chengarda/pen/wRxoyB
+// Canvas pan and zoom code from https://codepen.io/chengarda/pen/wRxoyB
 let cameraOffset = { x: window.innerWidth/2, y: window.innerHeight/2 }
 let cameraZoom = 1
 let zoomLoc = {x: innerWidth/2, y: innerHeight/2};
@@ -19,7 +19,7 @@ function onPointerDown(e){
     dragStart.y = getEventLocation(e).y/cameraZoom - cameraOffset.y
 }
 
-function onPointerUp(e){
+function onPointerUp(){
     isDragging = false
     lastZoom = cameraZoom
 }
@@ -39,7 +39,7 @@ function adjustZoom(e, zoomAmount){
     }
 }
 
-let page = document.getElementById('graph-svg');
+let page = document.getElementById('canvas');
 page.addEventListener('mousedown', onPointerDown);
 page.addEventListener('mouseup', onPointerUp);
 page.addEventListener('mousemove', onPointerMove);

@@ -10,6 +10,7 @@
         <canvas id="map-canvas"></canvas>
         <canvas id="roads-canvas"></canvas>
         <canvas id="cities-canvas"></canvas>
+        <canvas id="canvas"></canvas>
     </div>
 
     <svg id="graph-svg">
@@ -18,14 +19,14 @@
 
     <div id="sidebar">
         <h1>Fast Track</h1>
-        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="500000" autocomplete="off" onchange="graph.onMinPopChange()"></label>
+        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" autocomplete="off" onchange="graph.onMinPopChange()"></label>
         <label>
             City 1:
-            <input list="cityList" id="city1"/>
+            <input list="cityList" id="city1" onchange="graph.getEndpoints()"/>
         </label>
         <label>
             City 2:
-            <input list="cityList" id="city2"/>
+            <input list="cityList" id="city2" onchange="graph.getEndpoints()"/>
         </label>
         <datalist id="cityList"></datalist>
         <fieldset>
