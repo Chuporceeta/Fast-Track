@@ -9,9 +9,9 @@ class AdjList {
         this.cityData = new Map([...this.cityData.entries()].sort((a, b) => a[1].pop - b[1].pop));
         this.graph = new Map(); // {fromCityId : {toCityId: distance, ...}, ...}
         this.edgeParams = [0, 0];
-        this.active = false;
         this.endPoints = [-1, -1]
         this.path = null;
+        this.visited = null;
     }
 
     dist(fromId, toId) {
@@ -71,7 +71,9 @@ class AdjList {
         document.getElementById('city1').value = '';
         document.getElementById('city2').value = '';
 
-        this.active = false;
+        this.graph.clear();
+        this.path = null;
+        this.visited = null;
         this.endPoints = [-1, -1];
     }
 
@@ -106,21 +108,47 @@ class AdjList {
                     this.addEdge(fromId, toId);
             }
         }
-        this.active = true;
         this.edgeParams = [n, r];
     }
 
-    getEndpoints() {
-        let [city1, state1] = document.getElementById('city1').value.split(', ');
-        let [city2, state2] = document.getElementById('city2').value.split(', ');
-
+    getEndpoints(i) {
+        this.endPoints[i-1] = -1;
+        let [name, state] = document.getElementById('city'+i).value.split(', ');
         for (let id of this.cityList) {
             let city = this.cityData.get(id);
-            if (city.name === city1 && city.state === state1)
-                this.endPoints[0] = id;
-            if (city.name === city2 && city.state === state2)
-                this.endPoints[1] = id;
+            if (city.name === name && city.state === state)
+                this.endPoints[i-1] = id;
         }
+        this.path = null;
+        this.visited = null;
+    }
+
+    traceVisited() {
+        if (this.visited === null)
+            return;
+        let geoJson = {
+            "type": "FeatureCollection",
+            "features": []
+        };
+
+        this.visited.forEach(pair => {
+            let fromCity = this.cityData.get(pair[0]);
+            let toCity = this.cityData.get(pair[1]);
+            geoJson.features.push({
+                type: "Feature",
+                geometry: {
+                    type: "LineString",
+                    coordinates: [[fromCity.lon, fromCity.lat], [toCity.lon, toCity.lat]]
+                }
+            });
+
+        });
+
+        ctx.lineWidth = 3/cameraZoom;
+        ctx.strokeStyle = 'green';
+        ctx.beginPath();
+        this.geoGenerator(geoJson);
+        ctx.stroke();
     }
 
     tracePath() {
@@ -173,32 +201,31 @@ class AdjList {
         ctx.stroke();
 
         // +====================+ Draw Roads +====================+ //
-        if (this.active) {
-            let geoJson = {
-                "type": "FeatureCollection",
-                "features": []
-            };
+        let geoJson = {
+            "type": "FeatureCollection",
+            "features": []
+        };
 
-            for (let [fromId, toCities] of this.graph) {
-                for (let [toId, _] of toCities) {
-                    let fromCity = this.cityData.get(fromId);
-                    let toCity = this.cityData.get(toId);
-                    geoJson.features.push({
-                        type: "Feature",
-                        geometry: {
-                            type: "LineString",
-                            coordinates: [[fromCity.lon, fromCity.lat], [toCity.lon, toCity.lat]]
-                        }
-                    });
-                }
+        for (let [fromId, toCities] of this.graph) {
+            for (let [toId, _] of toCities) {
+                let fromCity = this.cityData.get(fromId);
+                let toCity = this.cityData.get(toId);
+                geoJson.features.push({
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: [[fromCity.lon, fromCity.lat], [toCity.lon, toCity.lat]]
+                    }
+                });
             }
-            ctx.lineWidth = 1/cameraZoom;
-            ctx.beginPath();
-            this.geoGenerator(geoJson);
-            ctx.stroke();
-
-            this.tracePath();
         }
+        ctx.lineWidth = 1/cameraZoom;
+        ctx.beginPath();
+        this.geoGenerator(geoJson);
+        ctx.stroke();
+
+        this.traceVisited();
+        this.tracePath();
 
         // +====================+ Draw Cities +====================+ //
         ctx.fillStyle = '#dcdcdc';
@@ -207,8 +234,16 @@ class AdjList {
         for (let id of this.cityList)
             this.drawCity(id);
 
+        ctx.strokeStyle = 'green';
+        if (this.visited)
+            for (let [fromId, toId] of this.visited) {
+                console.log(fromId);
+                this.drawCity(fromId);
+                this.drawCity(toId);
+            }
+
         ctx.strokeStyle = 'red';
-        if (this.path && this.active)
+        if (this.path)
             for (let id of this.path)
                 this.drawCity(id);
 
@@ -224,6 +259,8 @@ class AdjList {
         let dijkstra = document.getElementById('dijkstra-toggle').checked;
         let aStar = document.getElementById('a*-toggle').checked;
 
+        this.visited = new Set();
+
         if (!dijkstra && !aStar) {
             window.alert('Please select a path-finding algorithm.');
             return;
@@ -237,6 +274,7 @@ class AdjList {
 
         if (this.path === null)
             window.alert('No path exists between these two cities. Try building more roads.');
+
     }
 
     Dijkstra(start, goal) {
@@ -268,6 +306,7 @@ class AdjList {
             }
 
             for (let [neighbor, d] of this.graph.get(current.id)) {
+                this.visited.add([current.id, neighbor]);
                 let newGScore = (gScores.get(current.id) ?? Number.MAX_SAFE_INTEGER) + d;
                 if (newGScore < (gScores.get(neighbor) ?? Number.MAX_SAFE_INTEGER)) {
                     predecessors.set(neighbor, current.id);

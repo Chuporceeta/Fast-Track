@@ -22,11 +22,11 @@
         <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" autocomplete="off" onchange="graph.onMinPopChange()"></label>
         <label>
             City 1:
-            <input list="cityList" id="city1" onchange="graph.getEndpoints()"/>
+            <input list="cityList" id="city1" onchange="graph.getEndpoints(1)"/>
         </label>
         <label>
             City 2:
-            <input list="cityList" id="city2" onchange="graph.getEndpoints()"/>
+            <input list="cityList" id="city2" onchange="graph.getEndpoints(2)"/>
         </label>
         <datalist id="cityList"></datalist>
         <fieldset>
@@ -47,6 +47,10 @@
             </div>
         </fieldset>
         <input type="button" value="Go!" onclick="launch()"/>
+
+        <div id="search-results">
+
+        </div>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -54,6 +58,6 @@
     <script src="Canvas.js"></script>
     <script src="QuadTree.js"></script>
     <script src="Graph.js"></script>
-    <script src="process-data.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
