@@ -74,6 +74,8 @@ class AdjList {
         this.graph.clear();
         this.path = null;
         this.visited = null;
+        document.getElementById('search-results').textContent = '';
+        document.getElementById('search-path').innerHTML = '';
         this.endPoints = [-1, -1];
     }
 
@@ -121,6 +123,8 @@ class AdjList {
         }
         this.path = null;
         this.visited = null;
+        document.getElementById('search-results').textContent = '';
+        document.getElementById('search-path').innerHTML = '';
     }
 
     traceVisited() {
