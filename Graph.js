@@ -237,7 +237,6 @@ class AdjList {
         ctx.strokeStyle = 'green';
         if (this.visited)
             for (let [fromId, toId] of this.visited) {
-                console.log(fromId);
                 this.drawCity(fromId);
                 this.drawCity(toId);
             }
@@ -258,23 +257,39 @@ class AdjList {
     search() {
         let dijkstra = document.getElementById('dijkstra-toggle').checked;
         let aStar = document.getElementById('a*-toggle').checked;
+        let results = document.getElementById('search-results');
+        let ul = document.getElementById('search-path');
 
         this.visited = new Set();
+        ul.innerHTML = '';
 
-        if (!dijkstra && !aStar) {
-            window.alert('Please select a path-finding algorithm.');
+        if (this.endPoints.includes(-1)) {
+            results.textContent = 'Please select the start and end cities.';
             return;
-        } else if (this.endPoints.includes(-1)) {
-            window.alert('Please select the start and end cities.');
+        } else if (!dijkstra && !aStar) {
+            results.textContent = 'Please select a path-finding algorithm.';
             return;
-        } else if (dijkstra)
+        } else  if (dijkstra)
             this.path = this.Dijkstra(...this.endPoints);
         else if (aStar)
             this.path = this.AStar(...this.endPoints);
 
         if (this.path === null)
-            window.alert('No path exists between these two cities. Try building more roads.');
-
+            results.textContent = 'No path exists between these two cities. Try building more roads.';
+        else {
+            let d = 0;
+            let prev = null;
+            for (let id of this.path) {
+                let li = document.createElement('li');
+                let city = this.cityData.get(id);
+                let diff= prev ? this.graph.get(prev).get(id) : 0;
+                d += diff;
+                li.textContent = `${city.name}, ${city.state} -- ${d} mi.` + (diff === 0 ? '' : `  (+${diff} mi.)`);
+                ul.append(li);
+                prev = id;
+            }
+            results.textContent = `Total trip distance: ${d} mi.`;
+        }
     }
 
     Dijkstra(start, goal) {
