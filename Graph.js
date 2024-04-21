@@ -263,7 +263,7 @@ class AdjList {
     }
 
     search() {
-        let stra = document.getElementById('stra-toggle').checked;
+        let dijkstra = document.getElementById('dijkstra-toggle').checked;
         let aStar = document.getElementById('a*-toggle').checked;
         let header = document.getElementById('results-header');
         let ul = document.getElementById('search-path');
@@ -274,11 +274,11 @@ class AdjList {
         if (this.endPoints.includes(-1)) {
             header.textContent = 'Please select the start and end cities.';
             return;
-        } else if (!stra && !aStar) {
+        } else if (!dijkstra && !aStar) {
             header.textContent = 'Please select a path-finding algorithm.';
             return;
-        } else  if (stra)
-            this.path = this.stra(...this.endPoints);
+        } else  if (dijkstra)
+            this.path = this.Dijkstra(...this.endPoints);
         else if (aStar)
             this.path = this.AStar(...this.endPoints);
 
@@ -333,6 +333,7 @@ class AdjList {
                 let neighbors = this.graph.get(current);
                 if (neighbors) {
                     for (let [neighbor, distance] of neighbors.entries()) {
+                        this.visited.add([current, neighbor]); // This is for visualizing the search
                         if (!visited.has(neighbor)) {
                             let newDistance = distances.get(current) + distance;
                             if (newDistance < distances.get(neighbor)) {
