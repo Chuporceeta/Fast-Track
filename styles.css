@@ -62,6 +62,11 @@ legend {
 
 #button {
     text-align: center;
+    width: 90%;
+    margin: auto;
+    display: flex;
+
+
 }
 
 #button > input {

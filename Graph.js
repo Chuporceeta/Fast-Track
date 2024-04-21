@@ -326,8 +326,6 @@ class AdjList {
                 return path;
             }
     
-            visited.add(current);
-    
             // If current is not in visited, check all neighbors.
             if (!visited.has(current)) {
                 let neighbors = this.graph.get(current);
@@ -346,6 +344,7 @@ class AdjList {
                     }
                 }
             }
+            visited.add(current);
         }
         return null;
     }
