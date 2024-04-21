@@ -259,7 +259,7 @@ class AdjList {
     }
 
     search() {
-        let dijkstra = document.getElementById('dijkstra-toggle').checked;
+        let stra = document.getElementById('stra-toggle').checked;
         let aStar = document.getElementById('a*-toggle').checked;
         let results = document.getElementById('search-results');
         let ul = document.getElementById('search-path');
@@ -270,11 +270,11 @@ class AdjList {
         if (this.endPoints.includes(-1)) {
             results.textContent = 'Please select the start and end cities.';
             return;
-        } else if (!dijkstra && !aStar) {
+        } else if (!stra && !aStar) {
             results.textContent = 'Please select a path-finding algorithm.';
             return;
-        } else  if (dijkstra)
-            this.path = this.Dijkstra(...this.endPoints);
+        } else  if (stra)
+            this.path = this.stra(...this.endPoints);
         else if (aStar)
             this.path = this.AStar(...this.endPoints);
 
@@ -297,6 +297,51 @@ class AdjList {
     }
 
     Dijkstra(start, goal) {
+        let distances = new Map();
+        let visited = new Set();
+        let predecessors = new Map();
+    
+        for (let cityId of this.cityData.keys()) {
+            distances.set(cityId, Infinity);
+        }
+        distances.set(start, 0);
+    
+        // The priority queue to select the city with the minimum distance.
+        let minHeap = new MinHeap((a) => distances.get(a));
+        minHeap.push(start);
+    
+        while (minHeap.size() > 0) {
+            let current = minHeap.pop();
+    
+            if (current === goal) {
+                let path = [];
+                while (current !== undefined) {
+                    path.unshift(current);
+                    current = predecessors.get(current);
+                }
+                return path;
+            }
+    
+            visited.add(current);
+    
+            // If current is not in visited, check all neighbors.
+            if (!visited.has(current)) {
+                let neighbors = this.graph.get(current);
+                if (neighbors) {
+                    for (let [neighbor, distance] of neighbors.entries()) {
+                        if (!visited.has(neighbor)) {
+                            let newDistance = distances.get(current) + distance;
+                            if (newDistance < distances.get(neighbor)) {
+                                // Update the distance and predecessor.
+                                distances.set(neighbor, newDistance);
+                                predecessors.set(neighbor, current);
+                                minHeap.push(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
