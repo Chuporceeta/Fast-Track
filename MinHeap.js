@@ -1,16 +1,16 @@
 class MinHeap {
     constructor(valueFunction) {
         this.content = [];
-        this.value = valueFunction; // Compare using this.value(element) not just element
+        this.value = valueFunction; // Do comparisons with this.value(element) not just element
     }
 
     size() {
         return this.content.length;
     }
 
-    push() {
+    push(element) {
         this.content.push(element);
-        this.bubbleUp(this.content.length - 1);
+        this.heapifyUp(this.content.length - 1);
     }
 
     pop() {
@@ -18,52 +18,49 @@ class MinHeap {
         const end = this.content.pop();
         if (this.content.length > 0) {
             this.content[0] = end;
-            this.sinkDown(0);
+            this.heapifyDown(0);
         }
         return result;
     }
 
-    bubbleUp(n) {
+    heapifyUp(n) {
         const element = this.content[n];
         const score = this.value(element);
         while (n > 0) {
             const parentN = Math.floor((n + 1) / 2) - 1;
             const parent = this.content[parentN];
-            if (score >= this.value(parent)) {
+            if (score >= this.value(parent))
                 break;
-            }
             this.content[parentN] = element;
             this.content[n] = parent;
             n = parentN;
         }
     }
 
-    sinkDown(n) {
+    heapifyDown(n) {
         const length = this.content.length;
         const element = this.content[n];
         const elemScore = this.value(element);
 
         while (true) {
-            const child2N = (n + 1) * 2;
-            const child1N = child2N - 1;
+            const val2 = (n + 1) * 2;
+            const index1 = val2 - 1;
 
             let swap = null;
-            let child1Score;
+            let val1;
             // If the first child exists (is inside the array)...
-            if (child1N < length) {
-                const child1 = this.content[child1N];
-                child1Score = this.value(child1);
-                if (child1Score < elemScore) {
-                    swap = child1N;
-                }
+            if (index1 < length) {
+                const child1 = this.content[index1];
+                val1 = this.value(child1);
+                if (val1 < elemScore)
+                    swap = index1;
             }
             // Do the same checks for the other child.
-            if (child2N < length) {
-                const child2 = this.content[child2N];
+            if (val2 < length) {
+                const child2 = this.content[val2];
                 const child2Score = this.value(child2);
-                if (child2Score < (swap === null ? elemScore : child1Score)) {
-                    swap = child2N;
-                }
+                if (child2Score < (swap === null ? elemScore : val1))
+                    swap = val2;
             }
 
             if (swap === null) break;
