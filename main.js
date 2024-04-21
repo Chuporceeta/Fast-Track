@@ -1,10 +1,6 @@
 const ctx = document.getElementById('canvas').getContext('2d');
 function dist(lon1, lat1, lon2, lat2) {
-    return Math.round(7912.2*Math.asin(Math.sqrt(
-            Math.pow(Math.sin(Math.PI*(lat1-lat2)/360), 2)
-            + Math.cos(Math.PI*lat1/180)
-                *Math.cos(Math.PI*lat2/180)
-                *Math.pow(Math.sin(Math.PI*(lon2-lon1)/360), 2))));
+    return Math.round(3956.1*d3.geoDistance([lon1, lat1], [lon2, lat2]));
 }
 
 let graph;

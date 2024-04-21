@@ -271,16 +271,20 @@ class AdjList {
         this.visited = new Set();
         ul.innerHTML = '';
 
+        let start = Date.now();
+
         if (this.endPoints.includes(-1)) {
             header.textContent = 'Please select the start and end cities.';
             return;
         } else if (!dijkstra && !aStar) {
             header.textContent = 'Please select a path-finding algorithm.';
             return;
-        } else  if (dijkstra)
+        } else if (dijkstra)
             this.path = this.Dijkstra(...this.endPoints);
         else if (aStar)
             this.path = this.AStar(...this.endPoints);
+
+        let elapsed = Date.now() - start;
 
         if (this.path === null)
             header.textContent = 'No path exists. Try building more roads.';
@@ -296,7 +300,7 @@ class AdjList {
                 ul.append(li);
                 prev = id;
             }
-            header.textContent = `Total trip distance: ${d} mi.`;
+            header.textContent = `Total trip distance: ${d} mi.  (took ${elapsed} ms)`;
         }
     }
 
@@ -325,7 +329,7 @@ class AdjList {
                 }
                 return path;
             }
-    
+
             // If current is not in visited, check all neighbors.
             if (!visited.has(current)) {
                 let neighbors = this.graph.get(current);
@@ -375,8 +379,8 @@ class AdjList {
 
             for (let [neighbor, d] of this.graph.get(current.id)) {
                 this.visited.add([current.id, neighbor]);
-                let newGScore = (gScores.get(current.id) ?? Number.MAX_SAFE_INTEGER) + d;
-                if (newGScore < (gScores.get(neighbor) ?? Number.MAX_SAFE_INTEGER)) {
+                let newGScore = (gScores.get(current.id) ?? Infinity) + d;
+                if (newGScore < (gScores.get(neighbor) ?? Infinity)) {
                     predecessors.set(neighbor, current.id);
                     gScores.set(neighbor, newGScore);
                     // if neighbor not in openSet
