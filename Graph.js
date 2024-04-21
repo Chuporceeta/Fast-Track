@@ -62,7 +62,11 @@ class AdjList {
         // Update City Dropdown
         let dropdown = document.getElementById('cityList');
         dropdown.replaceChildren();
-        for (let id of this.cityList) {
+        let name = id => {
+            let city = this.cityData.get(id);
+            return city.name+city.state;
+        };
+        for (let id of this.cityList.toSorted((a, b) => name(a).localeCompare(name(b)))) {
             let option = document.createElement('option');
             option.value = this.cityData.get(id).name + ', ' + this.cityData.get(id).state;
             dropdown.append(option);
@@ -74,7 +78,7 @@ class AdjList {
         this.graph.clear();
         this.path = null;
         this.visited = null;
-        document.getElementById('search-results').textContent = '';
+        document.getElementById('results-header').textContent = '';
         document.getElementById('search-path').innerHTML = '';
         this.endPoints = [-1, -1];
     }
@@ -123,7 +127,7 @@ class AdjList {
         }
         this.path = null;
         this.visited = null;
-        document.getElementById('search-results').textContent = '';
+        document.getElementById('results-header').textContent = '';
         document.getElementById('search-path').innerHTML = '';
     }
 
@@ -261,17 +265,17 @@ class AdjList {
     search() {
         let dijkstra = document.getElementById('dijkstra-toggle').checked;
         let aStar = document.getElementById('a*-toggle').checked;
-        let results = document.getElementById('search-results');
+        let header = document.getElementById('results-header');
         let ul = document.getElementById('search-path');
 
         this.visited = new Set();
         ul.innerHTML = '';
 
         if (this.endPoints.includes(-1)) {
-            results.textContent = 'Please select the start and end cities.';
+            header.textContent = 'Please select the start and end cities.';
             return;
         } else if (!dijkstra && !aStar) {
-            results.textContent = 'Please select a path-finding algorithm.';
+            header.textContent = 'Please select a path-finding algorithm.';
             return;
         } else  if (dijkstra)
             this.path = this.Dijkstra(...this.endPoints);
@@ -279,7 +283,7 @@ class AdjList {
             this.path = this.AStar(...this.endPoints);
 
         if (this.path === null)
-            results.textContent = 'No path exists between these two cities. Try building more roads.';
+            header.textContent = 'No path exists. Try building more roads.';
         else {
             let d = 0;
             let prev = null;
@@ -292,18 +296,19 @@ class AdjList {
                 ul.append(li);
                 prev = id;
             }
-            results.textContent = `Total trip distance: ${d} mi.`;
+            header.textContent = `Total trip distance: ${d} mi.`;
         }
     }
 
     Dijkstra(start, goal) {
+        
         return null;
     }
 
     AStar(start, goal) {
         let h = n => this.dist(n, goal);
 
-        let openSet = new BinaryHeap(x => x.f);
+        let openSet = new MinHeap(x => x.f);
         openSet.push({id:start, f:h(start)});
 
         let predecessors = new Map();

@@ -13,47 +13,61 @@
         <canvas id="canvas"></canvas>
     </div>
 
-    <svg id="graph-svg">
-        <g id="graph"></g>
-    </svg>
-
     <div id="sidebar">
-        <h1>Fast Track</h1>
-        <label>Show cities with a population of at least <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" autocomplete="off" onchange="graph.onMinPopChange()"></label>
-        <label>
-            City 1:
-            <input list="cityList" id="city1" onchange="graph.getEndpoints(1)"/>
-        </label>
-        <label>
-            City 2:
-            <input list="cityList" id="city2" onchange="graph.getEndpoints(2)"/>
-        </label>
-        <datalist id="cityList"></datalist>
-        <fieldset>
-            <legend>Build roads to:</legend>
-            <div>
-                <label>
-                    the <input type="number" class="num-input" autocomplete="off" id="n" min="-1" max="20" value="5"> closest cities
-                    within <input type="number" class="num-input" autocomplete="off" id="r" min="-1" max="999" step="100" value="-1"> miles.
-                </label>
-                (enter -1 in either field for ∞)
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Select a path-finding algorithm:</legend>
-            <div>
-                <label><input type="radio" name="algorithm" id="dijkstra-toggle" autocomplete="off"> Dijkstra's Algorithm</label>
-                <label><input type="radio" name="algorithm" id="a*-toggle" autocomplete="off"> A* Search</label>
-            </div>
-        </fieldset>
-        <input type="button" value="Go!" onclick="launch()"/>
+        <h1 align="center">Fast Track</h1>
+        <div id="options">
 
-        <h3 id="search-results"></h3>
-        <ul id="search-path"></ul>
+            <label id="pop-label">
+                Show cities with populations of at least
+                <input type="number" id="pop-input" min="0" max="8000000" step="1000" value="50000" autocomplete="off" onchange="graph.onMinPopChange()">
+            </label>
+
+            <fieldset>
+                <legend>Travel between...</legend>
+                <label>
+                    <b> City 1: </b>
+                    <input list="cityList" id="city1" onchange="graph.getEndpoints(1)"/>
+                </label>
+                <label>
+                    <b> City 2: </b>
+                    <input list="cityList" id="city2" onchange="graph.getEndpoints(2)"/>
+                </label>
+            </fieldset>
+            <datalist id="cityList"></datalist>
+
+            <fieldset>
+                <legend>Build roads to...</legend>
+                <div>
+                    <label>
+                        The <input type="number" class="num-input" autocomplete="off" id="n" min="-1" max="20" value="5"> closest cities
+                        within <input type="number" class="num-input" autocomplete="off" id="r" min="-1" max="999" step="100" value="-1"> miles
+                    </label>
+                    (enter -1 in either field for ∞)
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Choose a path-finding algorithm</legend>
+                <div>
+                    <label><input type="radio" name="algorithm" id="dijkstra-toggle" autocomplete="off"> Dijkstra's Algorithm</label>
+                    <label><input type="radio" name="algorithm" id="a*-toggle" autocomplete="off"> A* Search</label>
+                </div>
+            </fieldset>
+        </div>
+
+        <div id="button">
+            <input type="button" value="Find Route" onclick="launch()"/>
+        </div>
+
+        <div id="search-results">
+            <h3 id="results-header"></h3>
+            <hr>
+            <ul id="search-path"></ul>
+        </div>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="heap.js"></script>
+    <script src="MinHeap.js"></script>
     <script src="Canvas.js"></script>
     <script src="QuadTree.js"></script>
     <script src="Graph.js"></script>
